@@ -21,16 +21,17 @@ import smtplib
 import email.Message
 
 def email_alert(message):
-    fromaddr = 'monitor@zhuamob.com'
-    toaddrs = 'quzhengping@gmail.com'
+    import config
+    fromaddr = config.fromaddr
+    toaddrs = config.toaddrs
     msg = email.Message.Message()
     msg['From'] = fromaddr
     msg['To'] = toaddrs
     msg['Subject'] = 'Zhuamob Script Server IP Address affairs'
     msg.set_payload(message)
-    server = smtplib.SMTP('smtp.exmail.qq.com')
+    server = smtplib.SMTP(config.smtp_server)
     #server.starttls()
-    server.login('monitor@zhuamob.com', 'bpocn123')
+    server.login(smtp_user, smtp_pass)
     server.sendmail(fromaddr, toaddrs, str(msg))
     server.quit()
 

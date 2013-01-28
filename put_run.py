@@ -16,7 +16,8 @@ now = datetime.datetime.now().strftime('%Y-%m-%d %T')
 log = '/mnt/tmp/monitor/history.txt'
 print now
 
-sst = [ '10.252.7.0', '10.85.150.57' ]
+sst = [ '10.203.75.95', '10.93.21.113' ]
+#sst = [ '10.86.147.177', '10.85.150.57' ]
 #sst = [ '10.252.7.0', '10.85.150.57', '10.252.75.209', '10.253.194.162' ]
 rahost = random.sample(sst, 1)
 #rahost = random.choice(sst)

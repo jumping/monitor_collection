@@ -16,6 +16,7 @@ import subprocess
 
 import boto
 
+import config
 #DEBUG = False
 DEBUG = True
 
@@ -83,7 +84,7 @@ def main():
     pathdir = os.getcwd()
     cmdfile = os.path.join(pathdir, 'change_iptables.pl')
     pickle_file = '/tmp/firewall.pkl'
-    fixed = [u'127.0.0.1', u'192.168.18.0/32', u'209.203.91.72/29', u'108.219.203.248/29']
+    fixed = config.fixed
 
     deletelist, addlist = [], []
 
