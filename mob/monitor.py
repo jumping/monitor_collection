@@ -61,6 +61,8 @@ def monitor(csvfile):
 def main():
     '''
     '''
+    import datetime
+    print datetime.datetime.now()
     monitor('urls.csv')
 
 
