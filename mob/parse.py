@@ -7,6 +7,10 @@
 #
 import csv
 
+class AttributeDict(dict): 
+    __getattr__ = dict.__getitem__
+    __setattr__ = dict.__setitem__
+
 class Parse(object):
     def __init__(self, csvfile):
         self.csvfile = csvfile
