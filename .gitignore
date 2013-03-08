@@ -1,3 +1,5 @@
 iptables-20120601.txt
 config.prod.py
 urls.csv
+config.py
+*.pyc
