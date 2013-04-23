@@ -33,7 +33,13 @@ def monitor(csvfile):
         checker = check.Check(u.url)
         try:
             checker.getinfo(float(u.timeout))
-        except urllib2.URLError as e:
+        #except urllib2.URLError as e:
+        #    reason = 'timed out'
+        #    if reason in e.reason:
+        #        alert(u.mail_addresses, reason)
+        #        if DEBUG: print reason
+        #        continue
+        except (urllib2.URLError, socket.timeout) as e:
             reason = 'timed out'
             if reason in e.reason:
                 alert(u.mail_addresses, reason)
