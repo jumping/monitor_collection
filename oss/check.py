@@ -159,4 +159,8 @@ def main():
 
 
 if __name__ == '__main__':
+    now = datetime.datetime.now()
+    if int(now.minute) < 11:
+        print "This script should run after the normal put and get process."
+        sys.exit(0)
     main()
