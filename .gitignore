@@ -5,3 +5,5 @@ config.py
 *.pyc
 *.py.swp
 .check.py.swp
+oss/bporemote.py 
+oss/bpomail.py
