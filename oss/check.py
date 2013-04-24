@@ -77,11 +77,56 @@ def main():
     now = datetime.datetime.now()
     hours = hourlist(now)
 
+    checkcmd = 'ls ' + os.path.join(dirname, now.strftime('%Y%m%d'))
+
     oss_missing = checkoss(hours)
     host_missing = checkhost(target, checkcmd, hours)
     if oss_missing:
         remote_source = bporemote.Remote()
         remote_source.add_host(source)
-        for h in oss_missing:
-            remote.run(cmd + h)
+        remote_target= bporemote.Remote()
+        remote_target.add_host(target)
 
+        for h in oss_missing:
+            f = "%s.%s.log" %(prefix, h)
+            sfile = os.path.join(dirname, h[:8], f)
+            ossfile = os.path.join(oss_pre, h[:4], h[4:6], h[6:8], f+'.gz')
+            try:
+                cmd = 'gzip -f %s' % sfile
+                remote_source.run(cmd)
+            except:
+                pass
+            cmd = 'osscmd put %s  %s' %(sfile+'.gz', ossfile)
+            remote_source.run(cmd)
+
+            cmd = 'osscmd get %s %s' %(ossfile, sfile+'.gz')
+            remote_target(cmd)
+            cmd = 'gunzip -f %s' % sfile
+            remote_target(cmd)
+
+        remote_source.close()
+        remote_target.close()
+
+    if host_missing:
+        remote_target= bporemote.Remote()
+        remote_target.add_host(target)
+        for h in host_missing:
+            f = "%s.%s.log" %(prefix, h)
+            sfile = os.path.join(dirname, h[:8], f)
+            ossfile = os.path.join(oss_pre, h[:4], h[4:6], h[6:8], f+'.gz')
+            cmd = 'osscmd get %s %s' %(ossfile, sfile+'.gz')
+            remote_target(cmd)
+            cmd = 'gunzip -f %s' % sfile
+            remote_target(cmd)
+        remote_target.close()
+
+    if host_missing:
+        reason = '@target host: missing {}'.format(host_missing)
+        bpomail.sendMail(smtp_server, smtp_user, smtp_pass, from_email, to_email, subject, reason)
+    if oss_missing:
+        reason = '@source host: missing {}'.format(host_missing)
+        bpomail.sendMail(smtp_server, smtp_user, smtp_pass, from_email, to_email, subject, reason)
+
+
+if __name__ == '__main__':
+    main()

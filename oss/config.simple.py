@@ -6,6 +6,9 @@
 #vim: ts=4 sts=4 et sw=4
 #
 
+#prefix of oss
+oss_pre = ''
+
 #prefix of log
 prefix = ''
 
@@ -19,6 +22,15 @@ target = ''
 
 #to check the log files on target host
 checkcmd = ''
+
+#email config
+smtp_server = ''
+smtp_user   = ''
+smtp_pass   = ''
+
+from_email  = ''
+to_email    = ''
+subject     = ''
 
 
 def main():
