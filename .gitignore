@@ -3,3 +3,4 @@ config.prod.py
 urls.csv
 config.py
 *.pyc
+*.py.swp

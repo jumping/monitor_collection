@@ -73,8 +73,15 @@ def checkhost(host, cmd, hours):
     return missing
 
 def main():
+    from config import *
     now = datetime.datetime.now()
     hours = hourlist(now)
 
     oss_missing = checkoss(hours)
+    host_missing = checkhost(target, checkcmd, hours)
+    if oss_missing:
+        remote_source = bporemote.Remote()
+        remote_source.add_host(source)
+        for h in oss_missing:
+            remote.run(cmd + h)
 
