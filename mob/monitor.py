@@ -6,6 +6,7 @@
 #vim: ts=4 sts=4 et sw=4
 #
 import urllib2
+import socket
 
 import check
 import parse
