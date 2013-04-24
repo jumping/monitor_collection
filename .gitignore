@@ -4,3 +4,4 @@ urls.csv
 config.py
 *.pyc
 *.py.swp
+.check.py.swp
