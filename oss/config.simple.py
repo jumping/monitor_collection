@@ -29,7 +29,7 @@ smtp_user   = ''
 smtp_pass   = ''
 
 from_email  = ''
-to_email    = ''
+to_email    = ['']
 subject     = ''
 
 

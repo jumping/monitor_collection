@@ -5,12 +5,20 @@
 #
 #vim: ts=4 sts=4 et sw=4
 #
+import sys
 import os
 import re
+import subprocess
 
 import time
 import datetime
 import bporemote
+import bpomail
+
+import config
+
+#DEBUG = True
+DEBUG = False
 
 def filelist(ossobj):
     '''
@@ -18,13 +26,24 @@ def filelist(ossobj):
     OUTPUT: [ 'dddd-dd-dd dd:dd  dMB oss://xxxx/xxxx/xxx', 'dddd-dd-dd dd:dd  dKB oss://xxxx/xxxx/xxx' ]
     '''
     lines = []
-    match = re.compile('(^[\d].*) \n')
     cmd = 'osscmd ls %s' % ossobj
-    stdin, stdout, stderr = os.popen3(cmd)
-    output = stdout.readlines()
+    if DEBUG: print cmd
+    match = re.compile('(^[\d].*) \n')
+    #stdin, stdout, stderr = os.popen3(cmd)
+    #output = stdout.readlines()
+    d = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True)
+    output = d.stdout.readlines()
+    if 'Error' in output:
+        print "Please check the cmd or authoriztion."
+        print output
+        print cmd
+        sys.exit(1)
     for line in output:
         m = match.findall(line)
         if m: lines.append(m[0])
+
+    if DEBUG: print "@OSS: ", lines
+
     return lines
 
 def hourlist(daytime):
@@ -37,7 +56,7 @@ def hourlist(daytime):
     now_hour = daytime.hour
     for x in xrange(0, now_hour):
         hours.append("%02d" %x)
-    hours.append("%02d" %now_hour)
+    #hours.append("%02d" %now_hour)
 
     return [ prefix + h for h in hours ]
 
@@ -45,16 +64,16 @@ def cmplist(alist, blist):
     outlist = set(alist) - set(blist)
     return list(outlist)
 
-def checkoss(hours):
-    YYYYMMDD = now.strftime('%Y/%m/%d/') )
-    ossobj = os.path.join( 'oss://', YYYYMMDD)
+def checkoss(hours, now):
+    YYYYMMDD = now.strftime('%Y/%m/%d/') 
+    ossobj = os.path.join( config.oss_pre, YYYYMMDD)
     lines = filelist(ossobj)
     m = re.compile('(\d{10})')
     hours_lines = [ m.findall(x)[0] for x in lines ]
     
     missing = cmplist(hours, hours_lines)
     if missing:
-        print "Missing files: {}".format(missing)
+        print "Missing files: ", missing
 
     return missing
 
@@ -68,64 +87,75 @@ def checkhost(host, cmd, hours):
 
     missing = cmplist(hours, file_hour)
     if missing:
-        print "Missing files: {}".format(missing)
+        print "Missing files: ", missing
+    #print missing
 
     return missing
 
 def main():
-    from config import *
     now = datetime.datetime.now()
     hours = hourlist(now)
 
-    checkcmd = 'ls ' + os.path.join(dirname, now.strftime('%Y%m%d'))
+    checkcmd = 'ls ' + os.path.join(config.dirname, now.strftime('%Y%m%d'))
 
-    oss_missing = checkoss(hours)
-    host_missing = checkhost(target, checkcmd, hours)
-    if oss_missing:
+    oss_missing = checkoss(hours, now)
+    host_missing = checkhost(config.target, checkcmd, hours)
+
+    if DEBUG:
+        if oss_missing:
+            print "@OSS, missing: ", oss_missing
+        else:
+            print "@OSS, No missing."
+        if host_missing:
+            print "@source host, missing: ", host_missing, oss_missing
+        else:
+            print "@source host, NO missing."
+
+    if oss_missing and not DEBUG:
         remote_source = bporemote.Remote()
-        remote_source.add_host(source)
+        remote_source.add_host(config.source)
         remote_target= bporemote.Remote()
-        remote_target.add_host(target)
+        remote_target.add_host(config.target)
 
         for h in oss_missing:
-            f = "%s.%s.log" %(prefix, h)
-            sfile = os.path.join(dirname, h[:8], f)
-            ossfile = os.path.join(oss_pre, h[:4], h[4:6], h[6:8], f+'.gz')
+            f = "%s.%s.log" %(config.prefix, h)
+            sfile = os.path.join(config.dirname, h[:8], f)
+            ossfile = os.path.join(config.oss_pre, h[:4], h[4:6], h[6:8], f+'.gz')
             try:
                 cmd = 'gzip -f %s' % sfile
-                remote_source.run(cmd)
+                remote_source.run_once(cmd)
             except:
                 pass
             cmd = 'osscmd put %s  %s' %(sfile+'.gz', ossfile)
-            remote_source.run(cmd)
+            remote_source.run_once(cmd)
 
             cmd = 'osscmd get %s %s' %(ossfile, sfile+'.gz')
-            remote_target(cmd)
+            remote_target.run_once(cmd)
             cmd = 'gunzip -f %s' % sfile
-            remote_target(cmd)
+            remote_target.run_once(cmd)
 
         remote_source.close()
         remote_target.close()
 
-    if host_missing:
+    if host_missing and not DEBUG:
         remote_target= bporemote.Remote()
-        remote_target.add_host(target)
+        remote_target.add_host(config.target)
         for h in host_missing:
-            f = "%s.%s.log" %(prefix, h)
-            sfile = os.path.join(dirname, h[:8], f)
-            ossfile = os.path.join(oss_pre, h[:4], h[4:6], h[6:8], f+'.gz')
+            f = "%s.%s.log" %(config.prefix, h)
+            sfile = os.path.join(config.dirname, h[:8], f)
+            ossfile = os.path.join(config.oss_pre, h[:4], h[4:6], h[6:8], f+'.gz')
             cmd = 'osscmd get %s %s' %(ossfile, sfile+'.gz')
-            remote_target(cmd)
+            remote_target.run_once(cmd)
             cmd = 'gunzip -f %s' % sfile
-            remote_target(cmd)
+            remote_target.run_once(cmd)
         remote_target.close()
 
-    if host_missing:
-        reason = '@target host: missing {}'.format(host_missing)
-        bpomail.sendMail(smtp_server, smtp_user, smtp_pass, from_email, to_email, subject, reason)
-    if oss_missing:
-        reason = '@source host: missing {}'.format(host_missing)
-        bpomail.sendMail(smtp_server, smtp_user, smtp_pass, from_email, to_email, subject, reason)
+    if host_missing and not DEBUG:
+        reason = '@target host: missing %s' %(','.join(host_missing))
+        bpomail.sendMail(config.smtp_server, config.smtp_user, config.smtp_pass, config.from_email, config.to_email, config.subject, reason)
+    if oss_missing and not DEBUG:
+        reason = '@source host: missing %s' %(','.join(host_missing))
+        bpomail.sendMail(config.smtp_server, config.smtp_user, config.smtp_pass, config.from_email, config.to_email, config.subject, reason)
 
 
 if __name__ == '__main__':
