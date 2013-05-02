@@ -8,3 +8,4 @@ config.py
 oss/bporemote.py
 oss/bpomail.py
 GeoIP.dat
+sitetrackerlogs.2013050200.log
