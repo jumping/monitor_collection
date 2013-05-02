@@ -128,23 +128,35 @@ def main(logfile):
 
     print
     print "The %  for US, JP, AU "
-    couns = ['US', 'JP', 'AU']
+    couns = {'US':0, 'JP':0, 'AU':0, 'EU':0}
+    out = open('output.csv','a')
     for p in part_ip_country:
-        print
-        print "\t  %s \t " %p
-        print
+        print "====================="
+        print "==\t  %s \t   ==" %p
+        print "====================="
         num = 0
         for a in part_ip_country[p]:
             plen = len(part_ip_country[p][a])
             num += plen
 
-        for c in couns:
+        for c in couns.keys():
             try:
                 pc = len(part_ip_country[p][c])
                 per = float(pc)/num
-                print "%s \t :" %c,"{0:.2%}".format(per),"\t"
+            #    print "%s\t:" %c,"{0:.2%}".format(per),"\t"
+            #    out.write(logfile+','+p+','+c+','+"{0:.2%}".format(per)+'\n')
             except:
-                print "%s \t :" %c,"{0:.2%}".format(0.0),"\t"
+                per = 0.00
+                #print "%s\t:" %c,"{0:.2%}".format(0.0),"\t"
+                #out.write(logfile+','+p+','+c+','+'0.00'+'\n')
+            print "%s\t:" %c,"{0:.2%}".format(per),"\t"
+            couns[c] = per 
+        print
+
+        hour = logfile.split('.')[1]
+        line = hour + ','+p+','+ "%.2f" %couns['US']+ ','  + "%.2f" %couns['JP'] + ',' + "%.2f" %couns['AU'] +'\n'
+        out.write(line)
+    out.close()
 
 
 if __name__ == '__main__':
