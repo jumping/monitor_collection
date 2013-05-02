@@ -7,3 +7,4 @@ config.py
 .check.py.swp
 oss/bporemote.py
 oss/bpomail.py
+GeoIP.dat
