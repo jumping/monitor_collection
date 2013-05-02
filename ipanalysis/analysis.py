@@ -7,6 +7,7 @@
 #
 import re
 import os
+import sys
 import csv
 import socket
 import urllib
@@ -125,6 +126,7 @@ def main(logfile):
         print "Total useful IP : %d" % total
         print "Total Wrong IP : %d" % wrongip
 
+    print
     print "The %  for US, JP, AU "
     couns = ['US', 'JP', 'AU']
     for p in part_ip_country:
@@ -148,7 +150,7 @@ def main(logfile):
 if __name__ == '__main__':
     from optparse import OptionParser
     parser = OptionParser(usage="%prog [options]")
-    parser.add_option("-n", "--name", help="The name of file", dest="filename")
+    parser.add_option("-f", "--filename", help="The name of file", dest="filename")
     (options, args) = parser.parse_args()
     if not options.filename:
         print "Please check the input"
