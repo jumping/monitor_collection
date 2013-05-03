@@ -133,7 +133,7 @@ def main(logfile):
         print "Total Wrong IP : %d" % wrongip
 
     print
-    print "The %  for US, JP, AU "
+    if DEBUG: print "The %  for US, JP, AU "
     couns = {'US':0, 'JP':0, 'AU':0, 'EU':0}
 
     out = open('output.csv','r')
