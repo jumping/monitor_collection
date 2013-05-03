@@ -19,6 +19,11 @@ DEBUG = False
 
 ipRex = '((?:(?:25[0-5]|2[0-4]\d|((1\d{2})|([1-9]?\d)))\.){3}(?:25[0-5]|2[0-4]\d|((1\d{2})|([1-9]?\d))))'
 
+def get_files(dirname):
+    for root, dirs, files in os.walk(dirname):
+        print root
+    return files
+
 def partern(line):
     match = re.compile('.*\?ptr=(.*)$')
     match2 = re.compile('(.*)-.*$')
@@ -81,6 +86,7 @@ def main(logfile):
     '''
     '''
     wrongip = 0
+    items = csvreader('country_continent.csv')
 
     if not os.path.exists('GeoIP.dat'):
         import subprocess
@@ -129,32 +135,48 @@ def main(logfile):
     print
     print "The %  for US, JP, AU "
     couns = {'US':0, 'JP':0, 'AU':0, 'EU':0}
+
+    out = open('output.csv','r')
+    tmp = False
+    if not out.read():
+        tmp = True
+        out.close()
     out = open('output.csv','a')
+    if tmp:
+        out.write('date,partern,US,JP,AU,EU\n')
+
     for p in part_ip_country:
-        print "====================="
-        print "==\t  %s \t   ==" %p
-        print "====================="
+        couns = {'US':0, 'JP':0, 'AU':0, 'EU':0}
+        #print "====================="
+        #print "==\t  %s \t   ==" %p
+        #print "====================="
         num = 0
         for a in part_ip_country[p]:
             plen = len(part_ip_country[p][a])
             num += plen
 
+        for c in part_ip_country[p].keys():
+            if couns.get(c, 'tmp') != 'tmp':
+                couns[c] += len(part_ip_country[p][c])
+                if DEBUG: print 'First',c
+            else:
+                region = items.get(c)
+                if DEBUG: print c, 'in Continent',region
+                if couns.get(region, 'tmp') != 'tmp':
+                    couns[region] += len(part_ip_country[p][c])
+                    if DEBUG: print 'Second',region
+
+        if DEBUG: print couns
         for c in couns.keys():
-            try:
-                pc = len(part_ip_country[p][c])
-                per = float(pc)/num
-            #    print "%s\t:" %c,"{0:.2%}".format(per),"\t"
-            #    out.write(logfile+','+p+','+c+','+"{0:.2%}".format(per)+'\n')
-            except:
-                per = 0.00
-                #print "%s\t:" %c,"{0:.2%}".format(0.0),"\t"
-                #out.write(logfile+','+p+','+c+','+'0.00'+'\n')
-            print "%s\t:" %c,"{0:.2%}".format(per),"\t"
-            couns[c] = per 
+            per = float(couns[c])/num *100
+            float_per = "%.2f" % per
+            #print "%s\t:" %c,"{0:.2%}".format(per),"\t"
+            couns[c] = float_per 
         print
 
         hour = logfile.split('.')[1]
-        line = hour + ','+p+','+ "%.2f" %couns['US']+ ','  + "%.2f" %couns['JP'] + ',' + "%.2f" %couns['AU'] +'\n'
+        #line = hour + ','+p+','+ "%.2f" %couns['US']+ ','  + "%.2f" %couns['JP'] + ',' + "%.2f" %couns['AU'] +'\n'
+        line = hour + ','+p+','+ couns['US']+ '%,'+couns['JP'] +'%,'+couns['AU']+'%,'+couns['EU'] +'%\n'
         out.write(line)
     out.close()
 
@@ -169,9 +191,16 @@ if __name__ == '__main__':
         sys.exit(1)
 
     if not os.path.exists(options.filename):
-        print "Please check the file exists!"
-        sys.exit(1)
-
-    main(options.filename)
-
-
+        files = get_files('.')
+        import fnmatch
+        logfiles = fnmatch.filter(files, "%s*" % options.filename)
+        if not len(logfiles):
+            print "Please check the file exists!"
+            sys.exit(1)
+        else:
+            for filename in logfiles:
+                print "Handling the %s" % filename
+                main(filename)
+    else:
+        print "Handling the %s" % options.filename
+        main(options.filename)
