@@ -83,7 +83,10 @@ def checkhost(host, cmd, hours):
     result = remote.run_once(cmd) 
     filelist = result['stdout']
     m = re.compile('.*\.(\d{10})\.log\n')
-    file_hour = m.findall(filelist[0])
+    if len(filelist) > 0:
+        file_hour = m.findall(filelist[0])
+    else:
+        return 
 
     missing = cmplist(hours, file_hour)
     if missing:
