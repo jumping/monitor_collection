@@ -13,7 +13,11 @@ class Parse(object):
         self.header = []
         self.body = []
         self.tail = []
-        self.read_file(self.filename)
+        if isinstance(filename, file):
+            self.read_file(self.filename)
+        else:
+            self.read_string(self.filename)
+        self.default_rule()
 
     def read_file(self, f):
         '''
@@ -52,7 +56,6 @@ class Parse(object):
                 continue
 
 
-        
     def default_rule(self):
         '''
         normalize the default rule of chain
@@ -73,6 +76,12 @@ class Compare(object):
     def find(self):
         self.right = list(set(self.source) - set(self.destin))
         self.left  = list(set(self.destin) - set(self.source))
+
+    def summary(self):
+        sum = {}
+        if self.right: sum['removed'] = list(self.right)
+        if self.left: sum['added'] = list(self.left)
+        return sum
 
 
 class DictDiffer(object):
@@ -102,6 +111,13 @@ class DictDiffer(object):
 
     def unchanged(self):
         return set(o for o in self.intersect if self.past_dict[o] == self.current_dict[o])
+
+    def summary(self):
+        sum = {}
+        if self.added(): sum['added'] = list(self.added())
+        if self.removed(): sum['added'] = list(self.removed())
+        if self.changed(): sum['changed'] = list(self.changed())
+        return sum
 
 
 def main():

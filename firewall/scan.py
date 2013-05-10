@@ -5,12 +5,21 @@
 #
 #vim: ts=4 sts=4 et sw=4
 #
+import os
 import Queue
+import logging
+import datetime
 import threading
 
 import bporemote
 import rule
 
+def output(dictname, loghd):
+    loghd.warning('###################')
+    for k in dictname.keys():
+        loghd.warning('%s :' % k)
+        loghd.warning('%s' % dictname[k])
+    loghd.warning('#######END#########')
 
 def read_host(fname):
     hosts = []
@@ -50,7 +59,34 @@ class ThreadFetch(threading.Thread):
 
 class ThreadCompare(threading.Thread):
     '''
-    compare  current rules and save rules
+    compare  current rules with saved rules
+    '''
+    def __init__(self, out_queue, logger):
+        threading.Thread.__init__(self)
+        self.out_queue = out_queue
+        self.logger = logger
+
+    def run(self):
+        while True:
+            current = self.out_queue.get()
+            host, rules = current.split("HH")
+            #compare current rules and saved rules
+            saved_parse = rule.Parse(os.path.join('saved',host))
+            curre_parse = rule.Parse(rules)
+            header_compare = rule.DictDiffer(saved_parse.header, curre_parse.header)
+            body_compare   = rule.Compare(saved_parse.body, curre_parse.body)
+
+            header_sum = header_compare.summary()
+            body_sum = body_compare.summary()
+            if header_sum: output(header_sum, self.logger)
+            if body_sum:   output(body_sum, self.logger)
+
+            self.out_queue.task_done()
+
+
+class ThreadSave(threading.Thread):
+    '''
+    save rules
     '''
     def __init__(self, out_queue):
         threading.Thread.__init__(self)
@@ -60,13 +96,27 @@ class ThreadCompare(threading.Thread):
         while True:
             current = self.out_queue.get()
             host, rules = current.split("HH")
-            #compare current rules and saved rules
+            #save rules as example
+            if not os.path.exists('saved'): os.mkdir('saved')
+            fobj = open(os.path.join('saved', host), 'w')
+            for rule in rules:
+                fobj.write(rules)
+                fobj.write(rules+'\n')
+            fobj.close()
             self.out_queue.task_done()
-
 
 def main(ip, first=False):
     '''
     '''
+    logger = logging.getLogger('firewall')
+    hdlr = logging.FileHandler('log.txt')
+    formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+    hdlr.setFormatter(formatter)
+    logger.addHandler(hdlr)
+    logger.setLevel(logging.WARNING)
+
+    logger.info('Starting at %s' % datetime.datetime.now())
+    if first: logger.info('Run initialization process')
     assert isinstance(ip, list)
 
     #queue
@@ -84,14 +134,24 @@ def main(ip, first=False):
     for h in ip:
         queue.put(host)
 
-    #threading spool
-    for i in range(5):
-        t = ThreadCompare(out_queue)
-        t.setDaemon(True)
-        t.start()
+    if first:
+        #threading spool
+        for i in range(5):
+            t = ThreadSave(out_queue)
+            t.setDaemon(True)
+            t.start()
+
+    else:
+        #threading spool
+        for i in range(5):
+            t = ThreadCompare(out_queue, logger)
+            t.setDaemon(True)
+            t.start()
 
     queue.join()
     out_queue.join()
+
+    logger.info('End at %s' % datetime.datetime.now())
 
 
 if __name__ == '__main__':
