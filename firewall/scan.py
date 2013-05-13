@@ -54,8 +54,12 @@ class ThreadFetch(threading.Thread):
 
             if result['stderr'] != 0:
                 result['stderr'].insert(0, host)
-                self.out_queue.put("HH".join(result['stdout']))
+            self.out_queue.put(host+"HH"+(result['stdout'][0]))
             self.queue.task_done()
+
+    def _stop(self):
+        if self.isAlive():
+            Thread._Thread__stop(self)
 
 class ThreadCompare(threading.Thread):
     '''
@@ -99,16 +103,20 @@ class ThreadSave(threading.Thread):
             #save rules as example
             if not os.path.exists('saved'): os.mkdir('saved')
             fobj = open(os.path.join('saved', host), 'w')
-            for rule in rules:
-                fobj.write(rules)
-                fobj.write(rules+'\n')
+            for rule in rules.split('\n'):
+                fobj.write(rule+'\n')
             fobj.close()
             self.out_queue.task_done()
+
+    def _stop(self):
+        if self.isAlive():
+            Thread._Thread__stop(self)
 
 def main(ip, first=False):
     '''
     '''
-    logger = logging.getLogger('firewall')
+    timeout = 30
+    logger = logging.getLogger('scan')
     hdlr = logging.FileHandler('log.txt')
     formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
     hdlr.setFormatter(formatter)
@@ -123,16 +131,15 @@ def main(ip, first=False):
     queue = Queue.Queue()
     out_queue = Queue.Queue()
     
+    #get data
+    for h in ip:
+        queue.put(h)
 
     #threading spool 
     for i in range(5):
         t = ThreadFetch(queue, out_queue)
         t.setDaemon(True)
         t.start()
-
-    #get data
-    for h in ip:
-        queue.put(host)
 
     if first:
         #threading spool
