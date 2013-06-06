@@ -29,8 +29,11 @@ def monitor(csvfile):
     parser.skip()
     urls = parser.content()
     for theurl in urls:
-        if DEBUG: print theurl 
         u = parse.AttributeDict(theurl)
+        if DEBUG:
+            print "-------------"
+            print  u.url
+            print "-------------"
         checker = check.Check(u.url)
         try:
             checker.getinfo(float(u.timeout))
@@ -41,11 +44,16 @@ def monitor(csvfile):
         #        if DEBUG: print reason
         #        continue
         except (urllib2.URLError, socket.timeout) as e:
-            reason = 'timed out'
-            if e == 'timeout' or reason in e.reason:
-                alert(u.mail_addresses, reason)
-                if DEBUG: print reason
-                continue
+            #reason = 'timed out'
+            #if e == 'timeout' or reason in e.reason:
+            #if e == 'timeout':
+            #    alert(u.mail_addresses, reason)
+            #    if DEBUG: print reason
+            #    continue
+            msg = '%s : %s' %(u.url,e.reason)
+            alert(u.mail_addresses, msg)
+            if DEBUG: print msg
+            continue
 
 
         leng = checker.length()

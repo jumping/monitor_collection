@@ -7,16 +7,23 @@
 #
 import re
 import urllib2
+import httplib
 
 class Check(object):
     def __init__(self, url):
         self.url = url
+        self.headers = ''
+        self.content = ''
 
     def getinfo(self, default_timeout=0.5):
         response = urllib2.urlopen(url=self.url, timeout=default_timeout)
         #urllib2.URLError: <urlopen error timed out>
         self.headers = response.info()
         self.content = response.read()
+        if not isinstance(self.headers, httplib.HTTPMessage):
+            raise urllib2.URLError('no headers')
+        if not self.content:
+            raise urllib2.URLError('no content')
 
     def length(self):
         return self.headers.get('content-length',0)
