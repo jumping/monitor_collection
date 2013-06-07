@@ -36,7 +36,7 @@ def monitor(csvfile):
             print "-------------"
         checker = check.Check(u.url)
         try:
-            checker.getinfo(float(u.timeout))
+            checker.getinfo(float(u.timeout), int(u.length))
         #except urllib2.URLError as e:
         #    reason = 'timed out'
         #    if reason in e.reason:
