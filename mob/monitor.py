@@ -50,7 +50,7 @@ def monitor(csvfile):
             #    alert(u.mail_addresses, reason)
             #    if DEBUG: print reason
             #    continue
-            msg = '%s : %s' %(u.url,e.reason)
+            msg = '%s : %s' %(u.url,e)
             alert(u.mail_addresses, msg)
             if DEBUG: print msg
             continue
