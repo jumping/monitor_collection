@@ -79,14 +79,18 @@ def checkoss(hours, now):
 
 def checkhost(host, cmd, hours):
     remote = bporemote.Remote()
-    remote.add_host(host)
-    result = remote.run_once(cmd) 
+    try:
+        remote.add_host(host)
+        result = remote.run_once(cmd) 
+    except Exception, e:
+        print e
+        return ''
     filelist = result['stdout']
     m = re.compile('.*\.(\d{10})\.log\n')
     if len(filelist) > 0:
         file_hour = m.findall(filelist[0])
     else:
-        return 
+        return ''
 
     missing = cmplist(hours, file_hour)
     if missing:
@@ -104,15 +108,22 @@ def main():
     oss_missing = checkoss(hours, now)
     host_missing = checkhost(config.target, checkcmd, hours)
 
-    if DEBUG:
-        if oss_missing:
-            print "@OSS, missing: ", oss_missing
-        else:
-            print "@OSS, No missing."
-        if host_missing:
-            print "@source host, missing: ", host_missing, oss_missing
-        else:
-            print "@source host, NO missing."
+    #check the oss_missing
+    if oss_missing:
+        print "@OSS, missing: ", oss_missing
+    else:
+        print "@OSS, No missing."
+
+    #check the host_missing
+    if isinstance(host_missing, str):
+        print "Could not connect to the instance: %s !" % config.target
+        sys.exit(0)
+
+    elif host_missing:
+        print "@source host, missing: ", host_missing, oss_missing
+    else:
+        print "@source host, NO missing."
+        sys.exit(0)
 
     if oss_missing and not DEBUG:
         remote_source = bporemote.Remote()
