@@ -47,7 +47,7 @@ if __name__ == '__main__':
     parser.add_option("-i", "--ip", help="ip address", dest="ip", action="append")
     parser.add_option("-g", "--group", help="group", dest="group",default=None)
     parser.add_option("-r", "--region", help="region", dest="region",default="us-east-1")
-    parser.add_option("-p", "--port", help="port", dest="port: \n 1. http(80); 2. salt(4505-4506) 3. ftp(20-21,1024-65535) \n", default=1)
+    parser.add_option("-p", "--port", dest="port", help="port: \n 1. http(80); 2. salt(4505-4506) 3. ftp(20-21,1024-65535) \n", default=1)
 
     (options, args) = parser.parse_args()
     if not options.group:
@@ -68,6 +68,6 @@ if __name__ == '__main__':
             i = i+'/32'
             ip.append(i)
     print "Adding {0} ...".format(ip)
-    main(ip, options.group, region, choice)
+    main(ip, options.group, options.region, port)
     #main(ip)
 
