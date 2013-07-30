@@ -12,6 +12,7 @@ import boto
 import boto.ec2.cloudwatch
 
 def config_inservice(as_name):
+    head = "multigraph inservice"
     title = "Number of instances for ELB '%s'" % as_name 
     category = "AWS"
     args = "-l 0 --base 1"
@@ -20,9 +21,10 @@ def config_inservice(as_name):
     item = """number.type ABSOLUTE
 number.label number of instances"""
 
-    print "graph_title %s\ngraph_category %s\ngraph_args %s\ngraph_vlabel %s\ngraph_info %s\n%s" %(title,category,args,vlabel,info, item)
+    print "head %s\ngraph_title %s\ngraph_category %s\ngraph_args %s\ngraph_vlabel %s\ngraph_info %s\n%s" %(head,title,category,args,vlabel,info, item)
 
 def config_latency(as_name):
+    head = "multigraph latency"
     title = "Seconds of latency for ELB '%s'" % as_name
     category = "AWS"
     args = "-l 0 --base 1000"
@@ -35,9 +37,10 @@ minimum.label Minimum latency
 average.type GAUGE
 average.label Average latency"""
 
-    print "graph_title %s\ngraph_category %s\ngraph_args %s\ngraph_vlabel %s\ngraph_info %s\n%s" %(title,category,args,vlabel,info, item)
+    print "head %s\ngraph_title %s\ngraph_category %s\ngraph_args %s\ngraph_vlabel %s\ngraph_info %s\n%s" %(head,title,category,args,vlabel,info, item)
     
 def config_requests(as_name):
+    head = "multigraph requests"
     title = "Requests/sec for ELB '%s'" % as_name
     category = "AWS"
     args = "-l 0 --base 1000"
@@ -46,7 +49,7 @@ def config_requests(as_name):
     item = """request.type ABSOLUTE
 request.label requests on ELB"""
 
-    print "graph_title %s\ngraph_category %s\ngraph_args %s\ngraph_vlabel %s\ngraph_info %s\n%s" %(title,category,args,vlabel,info, item)
+    print "head %s\ngraph_title %s\ngraph_category %s\ngraph_args %s\ngraph_vlabel %s\ngraph_info %s\n%s" %(head, title,category,args,vlabel,info, item)
 
 def inservice_number(as_name):
     conn = boto.connect_elb()
@@ -112,7 +115,10 @@ if __name__ == "__main__":
     maximum = m['Maximum']
     minimum = m['Minimum']
     average = m['Average']
-    print "number.value %d" % inservice_number(as_name)
-    print "maximum.value %f\nminimum.value: %f\naverage.value: %s" %(maximum,minimum,average)
-    print "request.value %d" % requests(as_name)
+    print "multigraph inservice"
+    print "multigraph inservice number.value %d" % inservice_number(as_name)
+    print "multigraph latency"
+    print "multigraph latency maximum.value %f\nmultigraph latency minimum.value: %f\nmultigraph latency average.value: %s" %(maximum,minimum,average)
+    print "multigraph requests"
+    print "multigraph requests request.value %d" % requests(as_name)
     sys.exit(0)
