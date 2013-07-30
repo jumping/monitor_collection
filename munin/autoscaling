@@ -5,6 +5,7 @@
 #
 #vim: ts=4 sts=4 et sw=4
 #
+import os
 import sys
 import datetime
 import boto
@@ -74,12 +75,12 @@ def requests(as_name):
 def link(as_name):
     dst_dir = '/etc/munin/plugins'
     src_path = '/usr/share/munin/plugins/autoscaling'
-    if not os.exists(src_path):
+    if not os.path.exists(src_path):
         print "The %s does not exist!" % src_path
         sys.exit(1)
     dst_name = "%s_%s" %(os.path.basename(src_path), as_name) 
     dst_path = os.path.join(dst_dir, dst_name)
-    if not os.exists(dst_path):
+    if not os.path.exists(dst_path):
         os.link(src_path, dst_path)
 
 def scan_as():
@@ -104,6 +105,7 @@ if __name__ == "__main__":
             config_requests(as_name)
             sys.exit(0)
         elif sys.argv[1] == 'ini':
+            scan_as()
 
     m = latency(as_name)
     maximum = m['Maximum']
