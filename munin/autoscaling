@@ -88,7 +88,7 @@ def scan_as():
     groups  = conn.get_all_groups()
     as_names = []
     for group in groups:
-        as_names.append(group.name.resplit('-',1)[:-1])
+        as_names.append(group.name.rsplit('-',1)[:-1][0])
 
     for as_name in as_names:
         link(as_name)
