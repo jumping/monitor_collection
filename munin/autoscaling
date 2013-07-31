@@ -21,7 +21,7 @@ def config_inservice(as_name):
     args = "-l 0 --base 1000"
     vlabel = "Numbers"
     info = "Show the instance number for ELB"
-    item = """num.type ABSOLUTE
+    item = """num.type GAUGE
 num.label number of instances"""
 
     print "%s\ngraph_title %s\ngraph_category %s\ngraph_args %s\ngraph_scale no\ngraph_vlabel %s\ngraph_info %s\n%s\n" %(head,title,category,args,vlabel,info, item)
