@@ -1,4 +1,4 @@
-#!/usr/bin/env python26
+#!/usr/bin/env python
 # -*- coding: UTF8 -*-
 #
 #   Jumping Qu @ BPO
@@ -12,18 +12,24 @@ import boto
 import boto.ec2.cloudwatch
 
 def config_inservice(as_name):
+    """
+    output config on inservice
+    """
     head = "multigraph inservice"
     title = "Number of instances for ELB %s" % as_name 
     category = "AWS"
-    args = "-l 0 --base 1"
-    vlabel = "Number"
+    args = "-l 0 --base 1000"
+    vlabel = "Numbers"
     info = "Show the instance number for ELB"
-    item = """number.type ABSOLUTE
-number.label number of instances"""
+    item = """num.type ABSOLUTE
+num.label number of instances"""
 
-    print "%s\ngraph_title %s\ngraph_category %s\ngraph_args %s\ngraph_vlabel %s\ngraph_info %s\n%s" %(head,title,category,args,vlabel,info, item)
+    print "%s\ngraph_title %s\ngraph_category %s\ngraph_args %s\ngraph_scale no\ngraph_vlabel %s\ngraph_info %s\n%s\n" %(head,title,category,args,vlabel,info, item)
 
 def config_latency(as_name):
+    """
+    output config on latency
+    """
     head = "multigraph latency"
     title = "Seconds of latency for ELB %s" % as_name
     category = "AWS"
@@ -37,9 +43,12 @@ minimum.label Minimum latency
 average.type GAUGE
 average.label Average latency"""
 
-    print "%s\ngraph_title %s\ngraph_category %s\ngraph_args %s\ngraph_vlabel %s\ngraph_info %s\n%s" %(head,title,category,args,vlabel,info, item)
+    print "%s\ngraph_title %s\ngraph_category %s\ngraph_args %s\ngraph_vlabel %s\ngraph_info %s\n%s\n" %(head,title,category,args,vlabel,info, item)
     
 def config_requests(as_name):
+    """
+    output config on requests
+    """
     head = "multigraph requests"
     title = "Requests/sec for ELB %s" % as_name
     category = "AWS"
@@ -49,15 +58,21 @@ def config_requests(as_name):
     item = """request.type ABSOLUTE
 request.label requests on ELB"""
 
-    print "%s\ngraph_title %s\ngraph_category %s\ngraph_args %s\ngraph_vlabel %s\ngraph_info %s\n%s" %(head, title,category,args,vlabel,info, item)
+    print "%s\ngraph_title %s\ngraph_category %s\ngraph_args %s\ngraph_vlabel %s\ngraph_info %s\n%s\n" %(head, title,category,args,vlabel,info, item)
 
 def inservice_number(as_name):
+    """
+    get the number of running instances
+    """
     conn = boto.connect_elb()
     groups = conn.describe_instance_health(as_name)
     instances = [ group.state for group in groups ]
     return len(filter(lambda x: x =='InService', instances))
 
 def latency(as_name):
+    """
+    get all latency in 5 minutes
+    """
     minutes = 5
     end_date = datetime.datetime.utcnow()
     start_date = end_date - datetime.timedelta(minutes=minutes)
@@ -68,6 +83,9 @@ def latency(as_name):
     return m
 
 def requests(as_name):
+    """
+    get all requests in 5 minutes
+    """
     minutes = 5
     end_date = datetime.datetime.utcnow()
     start_date = end_date - datetime.timedelta(minutes=minutes)
@@ -76,6 +94,9 @@ def requests(as_name):
     return sum(x['Sum'] for x in cw.get_metric_statistics(60, start_date, end_date, "RequestCount", "AWS/ELB", ["Sum"], dimensions))
 
 def link(as_name):
+    """
+    create symbol link with src_path
+    """
     dst_dir = '/etc/munin/plugins'
     src_path = '/usr/share/munin/plugins/autoscaling'
     if not os.path.exists(src_path):
@@ -84,9 +105,12 @@ def link(as_name):
     dst_name = "%s_%s" %(os.path.basename(src_path), as_name) 
     dst_path = os.path.join(dst_dir, dst_name)
     if not os.path.exists(dst_path):
-        os.link(src_path, dst_path)
+        os.symlink(src_path, dst_path)
 
 def scan_as():
+    """
+    scan AutoScaling groups, and create link with this file
+    """
     conn = boto.connect_autoscale()
     groups  = conn.get_all_groups()
     as_names = []
@@ -110,15 +134,21 @@ if __name__ == "__main__":
         elif sys.argv[1] == 'ini':
             scan_as()
             sys.exit(0)
+        else:
+            print """You can input :
+            %s config :::look config information
+            %s ini    :::generate plugins for all AutoScaling
+            """ % (sys.argv[0], sys.argv[0])
+            sys.exit(0)
 
     m = latency(as_name)
     maximum = m['Maximum']
     minimum = m['Minimum']
     average = m['Average']
     print "multigraph inservice"
-    print "number.value %d" % inservice_number(as_name)
+    print "num.value %d\n" % inservice_number(as_name)
     print "multigraph latency"
-    print "maximum.value %f\nminimum.value: %f\naverage.value: %f" %(maximum,minimum,average)
+    print "maximum.value %f\nminimum.value %f\naverage.value %f\n" %(maximum,minimum,average)
     print "multigraph requests"
     print "request.value %d" % requests(as_name)
     sys.exit(0)
