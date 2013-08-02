@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python26
 # -*- coding: UTF8 -*-
 #
 #   Jumping Qu @ BPO
@@ -15,7 +15,7 @@ def config_inservice(as_name):
     """
     output config on inservice
     """
-    head = "multigraph inservice"
+    head = "multigraph inservice_%s" % as_name.replace('-','_')
     title = "Number of instances for ELB %s" % as_name 
     category = "AWS"
     args = "-l 0 --base 1000"
@@ -30,7 +30,7 @@ def config_latency(as_name):
     """
     output config on latency
     """
-    head = "multigraph latency"
+    head = "multigraph latency_%s" % as_name.replace('-','_')
     title = "Seconds of latency for ELB %s" % as_name
     category = "AWS"
     args = "-l 0 --base 1000"
@@ -49,7 +49,7 @@ def config_requests(as_name):
     """
     output config on requests
     """
-    head = "multigraph requests"
+    head = "multigraph requests_%s" % as_name.replace('-','_')
     title = "Requests/sec for ELB %s" % as_name
     category = "AWS"
     args = "-l 0 --base 1000"
@@ -145,10 +145,11 @@ if __name__ == "__main__":
     maximum = m['Maximum']
     minimum = m['Minimum']
     average = m['Average']
-    print "multigraph inservice"
+    name = as_name.replace('-','_')
+    print "multigraph inservice_%s" % name
     print "num.value %d\n" % inservice_number(as_name)
-    print "multigraph latency"
+    print "multigraph latency_%s" % name
     print "maximum.value %f\nminimum.value %f\naverage.value %f\n" %(maximum,minimum,average)
-    print "multigraph requests"
+    print "multigraph requests_%s" % name
     print "request.value %d" % requests(as_name)
     sys.exit(0)
