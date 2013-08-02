@@ -1,13 +1,13 @@
 autosclaing
 ===========
 
-##1. ./autoscaling  config
+##1. ./autoscaling_elbname  config
 
 It will output the config information
 
-##2. ./autoscaling elb-name
+##2. ./autoscaling_elbname
 
-It will output the values for the elb-name
+It will output the values for the elbname
 
 ##3. ./autoscaling  ini
 
