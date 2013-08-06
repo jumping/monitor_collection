@@ -59,9 +59,11 @@ def main(url):
 
     bad_img = []
     for hu in host_url:
+        print "Checking on {0}".format(hu)
         host_page = fetch(os.path.join(url, hu))
         host_page_soup = BeautifulSoup.BeautifulSoup(host_page)
         imgs = get(host_page_soup, 'img', {'class':'i'})
+        print "There are {0} urls will check.".format(len(imgs))
         for img in imgs:
             abs_path = img.get('src').replace('../','')
             full_path = os.path.join(url, abs_path)
