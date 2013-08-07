@@ -9,11 +9,27 @@ import os
 import sys
 import logging
 import urllib2
+import datetime
 import BeautifulSoup
+import gevent
+from gevent.pool import Group
 
 #1. download the homepage of munin
 #2. pickup the url of every items
 #3. check existence of images of every items
+
+def fetch_gevent(url):
+    """fetch url in the way of gevent"""
+    try:
+        result = urllib2.urlopen(url).read()
+        return
+    except urllib2.HTTPError as e:
+        if e.code == 404:
+            logging.info("Not Fund")
+            return url
+        else:
+            logging.warn( "could not fetch the url %s" % url )
+            return 'Error'
 
 def fetch(url):
     if not url.startswith('http'):
@@ -57,29 +73,25 @@ def main(url):
 
     print "There are {0} hosts.".format(len(host_url))
 
+    group = Group()
     bad_img = []
     for hu in host_url:
         print "Checking on {0}".format(hu)
         host_page = fetch(os.path.join(url, hu))
         host_page_soup = BeautifulSoup.BeautifulSoup(host_page)
         imgs = get(host_page_soup, 'img', {'class':'i'})
-        print "There are {0} urls will be checked.".format(len(imgs))
-        for img in imgs:
-            abs_path = img.get('src').replace('../','')
-            full_path = os.path.join(url, abs_path)
-            fetch_img = fetch(full_path)
-            if not fetch_img:
-                bad_img.append(fetch_img)
+        print "There are {0} urls.".format(len(imgs))
+
+        img_url = [ os.path.join(url, img.get('src').replace('../','')) for img in imgs ]
+        print "There are {0} urls will be checked.".format(len(img_url))
+        fetch_result = group.map(fetch_gevent, img_url)
+        fetch_result = filter(lambda x: x, fetch_result)
+        bad_img.extend(fetch_result)
 
     if bad_img:
         print "The following images do not exits:"
     for bi in bad_img:
         print bi
-
-
-
-    #fetch details
-
 
 
 if __name__ == '__main__':
@@ -89,4 +101,7 @@ if __name__ == '__main__':
         print "Need a url!"
         sys.exit(0)
 
+    start = datetime.datetime.now()
     main(url)
+    end = datetime.datetime.now()
+    print end - start
