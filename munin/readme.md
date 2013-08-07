@@ -31,6 +31,10 @@ It will scan ELBs of your aws account, and create symlinks like as:
 * boto
 * python2.6
 
+check.py
+===========
+## ./check.py url_munin_gui
+It will check all urls and return the bad url.
 
 License and Author
 ==================
