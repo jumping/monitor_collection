@@ -50,11 +50,11 @@ def config_requests(as_name):
     output config on requests
     """
     head = "multigraph requests_%s" % as_name.replace('-','_')
-    title = "Requests/sec for ELB %s" % as_name
+    title = "Requests/minute for ELB %s" % as_name
     category = "AWS"
     args = "-l 0 --base 1000"
-    vlabel = "Requests/Sec"
-    info = "Show number of requests per second"
+    vlabel = "Requests/Minute"
+    info = "Show number of requests per minute"
     item = """request.type ABSOLUTE
 request.label requests on ELB"""
 
