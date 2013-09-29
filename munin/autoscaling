@@ -79,7 +79,10 @@ def latency(as_name):
     dimensions = dict({u'LoadBalancerName':[as_name]})
     cw = boto.ec2.cloudwatch.CloudWatchConnection()
     metrics = cw.get_metric_statistics(5*60, start_date, end_date, "Latency", "AWS/ELB", ["Average", "Minimum", "Maximum"],dimensions) 
-    m = metrics[0]
+    if metrics:
+        m = metrics[0]
+    else:
+        m = 0
     return m
 
 def requests(as_name):
